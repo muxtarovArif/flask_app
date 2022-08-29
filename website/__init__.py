@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-
+from os import path
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
@@ -8,7 +8,10 @@ DB_NAME = "database.db"
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'e7bf9f9ed2bebe4b2f9d01ed20c33d443a20b5be36509a7bd43259011fa77346dea1fbdbb6ee323a49bb18c2e2cb6481d19ba5e261ea483df842dddd9901bb09'
+    app.config['SECRET_KEY'] = 'hereisyoursecretkey'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
     
     from .views import views
     from .auth import auth
@@ -16,4 +19,14 @@ def create_app():
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
     
+    from .models import User, Note
+    
+    create_database(app)
+    
     return app
+
+def create_database(app):
+    if not path.exists('website/'+DB_NAME):
+        db.create_all(app=app)
+        print('Created Database')
+    
